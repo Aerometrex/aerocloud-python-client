@@ -3,27 +3,30 @@ import os
 import sys
 from functools import reduce
 
-if len(sys.argv) < 2:
-    print("Parent activity IDs should be provided as first argument (in CSV format).", file=sys.stderr)
+
+def fail(message):
+    print(message, file=sys.stderr)
     exit(-1)
+
+
+if len(sys.argv) < 2:
+    fail("Parent activity IDs should be provided as first argument (in CSV format).")
 
 parentActivityIds = sys.argv[1].split(",")
 
 if len(parentActivityIds) == 0:
-    print("No parent activity IDs specified!")
-    exit(-1)
+    fail("No parent activity IDs specified!")
 
 taskDataDir = os.environ.get("TASK_DATA_DIR")
 
 if taskDataDir is None:
-    print("TASK_DATA_DIR environment variable is not set!")
-    exit(-1)
+    fail("TASK_DATA_DIR environment variable is not set!")
 
 taskWorkingDir = os.environ.get("AZ_BATCH_TASK_WORKING_DIR")
 
 if taskWorkingDir is None:
-    print("AZ_BATCH_TASK_WORKING_DIR environment variable is not set!")
-    exit(-1)
+    fail("AZ_BATCH_TASK_WORKING_DIR environment variable is not set!")
+
 
 def getInputDirectories():
     return map(lambda id: os.path.join(taskDataDir, id), parentActivityIds)
