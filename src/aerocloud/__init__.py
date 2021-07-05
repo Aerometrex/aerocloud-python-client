@@ -1,1 +1,1 @@
-from client import getInputDirectories, getInputFiles, getResourceFile
+from aerocloud.client import getInputDirectories, getInputFiles, getResourceFile
