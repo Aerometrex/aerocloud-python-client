@@ -9,10 +9,12 @@ def fail(message):
     exit(-1)
 
 
-if len(sys.argv) < 2:
-    fail("Parent activity IDs should be provided as first argument (in CSV format).")
+parentActivityIdsString = os.environ.get("PARENT_TASK_IDS")
 
-parentActivityIds = sys.argv[1].split(",")
+if parentActivityIdsString is None:
+    fail("PARENT_TASK_IDS environment variable is not set!")
+
+parentActivityIds = parentActivityIdsString.split(",")
 
 if len(parentActivityIds) == 0:
     fail("No parent activity IDs specified!")
