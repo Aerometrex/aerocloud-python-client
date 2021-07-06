@@ -1,1 +1,1 @@
-from .client import getInputDirectories, getInputFiles, getResourceFile
+from .client import getInputDirectories, getInputFiles, getResourceFile, getOutputDirectory

@@ -42,3 +42,7 @@ def getInputFiles(filter="*.*"):
 
 def getResourceFile(name):
     return os.path.join(taskWorkingDir, name)
+
+
+def getOutputDirectory():
+    return taskDataDir
