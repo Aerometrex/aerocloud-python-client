@@ -1,2 +1,2 @@
-from .environment import getInputDirectories, getInputFiles, getResourceFile, getOutputDirectory, isLocal, getLocalWorkspace, setLocalWorkspace
+from .environment import getInputDirectory, getInputFiles, getResourceFile, getOutputDirectory, isLocal, getLocalWorkspace, setLocalWorkspace
 from .packages import getPackageDirectory

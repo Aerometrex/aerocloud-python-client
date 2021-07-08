@@ -1,8 +1,6 @@
 import glob
 import os
 
-from functools import reduce
-
 DEFAULT_LOCAL_WORKSPACE = "C:\\temp\\aerocloud"
 WORKSPACE_WORKING_DIR = "wd"
 WORKSPACE_DATA_DIR = "data"
@@ -40,15 +38,14 @@ def getDataDirectory():
     return os.path.join(localWorkspace, WORKSPACE_DATA_DIR) if isLocal() else os.environ.get(TASK_DATA_DIR_ENV_VAR)
 
 
-def getInputDirectories():
-    parentTaskIds = [WORKSPACE_INPUT_DIR] if isLocal() else os.environ.get(TASK_PARENT_TASK_IDS_ENV_VAR).split(",")
-    return map(lambda id: os.path.join(getDataDirectory(), id), parentTaskIds)
+def getInputDirectory():
+    # Note: The Python activity can only have a single parent.
+    parentTaskId = WORKSPACE_INPUT_DIR if isLocal() else os.environ.get(TASK_PARENT_TASK_IDS_ENV_VAR).split(",")[0]
+    return os.path.join(getDataDirectory(), parentTaskId)
 
 
 def getInputFiles(filter: str = "*.*"):
-    dirs = getInputDirectories()
-    matches = map(lambda dir: glob.glob(os.path.join(dir, filter)), dirs)
-    return reduce(lambda a, b: a + b, matches)
+    return glob.glob(os.path.join(getInputDirectory(), filter))
 
 
 def getResourceFile(name: str):
