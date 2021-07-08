@@ -40,7 +40,7 @@ def getDataDirectory():
 
 def getInputDirectory():
     # Note: The Python activity can only have a single parent.
-    parentTaskId = WORKSPACE_INPUT_DIR if isLocal() else os.environ.get(TASK_PARENT_TASK_IDS_ENV_VAR).split(",")[0]
+    parentTaskId = WORKSPACE_INPUT_DIR if isLocal() else os.environ.get(TASK_PARENT_TASK_IDS_ENV_VAR)
     return os.path.join(getDataDirectory(), parentTaskId)
 
 
