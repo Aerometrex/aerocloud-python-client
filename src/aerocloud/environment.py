@@ -20,28 +20,50 @@ def isLocal():
 
 
 def getLocalWorkspace():
-    return localWorkspace
+    return localWorkspace if isLocal() else None
 
 
-def setLocalWorkspace(path: str):
+def setLocalWorkspace(path: str = DEFAULT_LOCAL_WORKSPACE, init: bool = True):
+    if not isLocal():
+        return
+
     global localWorkspace
     localWorkspace = path
-    os.makedirs(os.path.join(localWorkspace, WORKSPACE_WORKING_DIR), exist_ok=True)
-    os.makedirs(os.path.join(localWorkspace, WORKSPACE_DATA_DIR, WORKSPACE_INPUT_DIR), exist_ok=True)
+
+    os.makedirs(localWorkspace, exist_ok=True)
+
+    if init:
+        os.makedirs(os.path.join(localWorkspace, WORKSPACE_WORKING_DIR), exist_ok=True)
+        os.makedirs(os.path.join(localWorkspace, WORKSPACE_DATA_DIR, WORKSPACE_INPUT_DIR), exist_ok=True)
 
 
 def getWorkingDirectory():
-    return os.path.join(localWorkspace, WORKSPACE_WORKING_DIR) if isLocal() else os.environ.get(TASK_WORKING_DIR_ENV_VAR)
+    workingDirectory = os.path.join(localWorkspace, WORKSPACE_WORKING_DIR) if isLocal() else os.environ.get(TASK_WORKING_DIR_ENV_VAR)
+
+    if not os.path.isdir(workingDirectory):
+        print(f'Working directory {workingDirectory} does not exist. Did you forget to initialise your local workspace?')
+
+    return workingDirectory
 
 
 def getDataDirectory():
-    return os.path.join(localWorkspace, WORKSPACE_DATA_DIR) if isLocal() else os.environ.get(TASK_DATA_DIR_ENV_VAR)
+    dataDirectory = os.path.join(localWorkspace, WORKSPACE_DATA_DIR) if isLocal() else os.environ.get(TASK_DATA_DIR_ENV_VAR)
+
+    if not os.path.isdir(dataDirectory):
+        print(f'Data directory {dataDirectory} does not exist. Did you forget to initialise your local workspace?')
+
+    return dataDirectory
 
 
 def getInputDirectory():
     # Note: The Python activity can only have a single parent.
     parentTaskId = WORKSPACE_INPUT_DIR if isLocal() else os.environ.get(TASK_PARENT_TASK_IDS_ENV_VAR)
-    return os.path.join(getDataDirectory(), parentTaskId)
+    inputDirectory = os.path.join(getDataDirectory(), parentTaskId)
+
+    if not os.path.isdir(inputDirectory):
+        print(f'Input directory {inputDirectory} does not exist. Did you forget to initialise your local workspace?')
+
+    return inputDirectory
 
 
 def getInputFiles(filter: str = "*.*"):
@@ -49,8 +71,14 @@ def getInputFiles(filter: str = "*.*"):
 
 
 def getResourceFile(name: str):
-    return os.path.join(getWorkingDirectory(), name)
+    path = os.path.join(getWorkingDirectory(), name)
+    return path if os.path.exists(path) else None
 
 
 def getOutputDirectory():
-    return getDataDirectory()
+    outputDirectory = getDataDirectory()
+
+    if not os.path.isdir(outputDirectory):
+        print(f'Output directory {outputDirectory} does not exist. Did you forget to initialise your local workspace?')
+
+    return outputDirectory
