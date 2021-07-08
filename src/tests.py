@@ -11,7 +11,6 @@ class TestWorkspace(unittest.TestCase):
     def setUp(self):
         # This test class interacts with the file system using a temporary directory.
         self.workspace = tempfile.TemporaryDirectory()
-        os.environ.pop(NODE_ID_ENV_VAR, None)
 
     def test_getLocalWorkspace_should_return_workspace_path_when_local(self):
         self.assertIsNotNone(environment.getLocalWorkspace())
@@ -38,6 +37,7 @@ class TestWorkspace(unittest.TestCase):
 
     def tearDown(self):
         self.workspace.cleanup()
+        os.environ.pop(NODE_ID_ENV_VAR, None)
 
 
 class TestInputOutput(unittest.TestCase):
@@ -86,12 +86,22 @@ class TestInputOutput(unittest.TestCase):
 
 class TestPackages(unittest.TestCase):
     def test_getPackageDirectory_with_version(self):
+        expected = "C:\\packages\lastools1.0"
+        os.environ["AZ_BATCH_APP_PACKAGE_lastools#1.0"] = expected
         actual = packages.getPackageDirectory(AppPackage.LASTOOLS, "1.0")
-        self.assertEqual(actual, "AZ_BATCH_APP_PACKAGE_lastools#1.0")
+        self.assertEqual(actual, expected)
 
     def test_getPackageDirectory_without_version(self):
+        expected = "C:\\packages\lastoolslatest"
+
+        # Note no version tag.
+        os.environ["AZ_BATCH_APP_PACKAGE_lastools"] = expected
         actual = packages.getPackageDirectory(AppPackage.LASTOOLS)
-        self.assertEqual(actual, "AZ_BATCH_APP_PACKAGE_lastools")
+        self.assertEqual(actual, expected)
+
+    def tearDown(self):
+        os.environ.pop("AZ_BATCH_APP_PACKAGE_lastools", None)
+        os.environ.pop("AZ_BATCH_APP_PACKAGE_lastools#1.0", None)
 
 
 if __name__ == "__main__":

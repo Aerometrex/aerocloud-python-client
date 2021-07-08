@@ -16,14 +16,17 @@ localWorkspace = DEFAULT_LOCAL_WORKSPACE
 
 
 def isLocal():
+    "Gets a value indicating whether the current environment is local (not Azure Batch)."
     return os.environ.get(NODE_ID_ENV_VAR) == None
 
 
 def getLocalWorkspace():
+    "Gets the local workspace path. Returns None if the path doesn't exist."
     return localWorkspace if isLocal() else None
 
 
 def setLocalWorkspace(path: str = DEFAULT_LOCAL_WORKSPACE, init: bool = True):
+    "Sets the local workspace path and (optionally) initialises its internal directory structure."
     if not isLocal():
         return
 
@@ -38,6 +41,7 @@ def setLocalWorkspace(path: str = DEFAULT_LOCAL_WORKSPACE, init: bool = True):
 
 
 def getWorkingDirectory():
+    "Gets the task's working directory. Any resource files uploaded on the activity can be found at this location."
     workingDirectory = os.path.join(localWorkspace, WORKSPACE_WORKING_DIR) if isLocal() else os.environ.get(TASK_WORKING_DIR_ENV_VAR)
 
     if not os.path.isdir(workingDirectory):
@@ -47,15 +51,12 @@ def getWorkingDirectory():
 
 
 def getDataDirectory():
-    dataDirectory = os.path.join(localWorkspace, WORKSPACE_DATA_DIR) if isLocal() else os.environ.get(TASK_DATA_DIR_ENV_VAR)
-
-    if not os.path.isdir(dataDirectory):
-        print(f'Data directory {dataDirectory} does not exist. Did you forget to initialise your local workspace?')
-
-    return dataDirectory
+    "Internal use only."
+    return os.path.join(localWorkspace, WORKSPACE_DATA_DIR) if isLocal() else os.environ.get(TASK_DATA_DIR_ENV_VAR)
 
 
 def getInputDirectory():
+    "Gets the activity's input directory. Any output files from the parent activity can be found at this location."
     # Note: The Python activity can only have a single parent.
     parentTaskId = WORKSPACE_INPUT_DIR if isLocal() else os.environ.get(TASK_PARENT_TASK_IDS_ENV_VAR)
     inputDirectory = os.path.join(getDataDirectory(), parentTaskId)
@@ -67,15 +68,18 @@ def getInputDirectory():
 
 
 def getInputFiles(filter: str = "*.*"):
+    "Gets the paths of any input files that match the specified glob pattern."
     return glob.glob(os.path.join(getInputDirectory(), filter))
 
 
 def getResourceFile(name: str):
+    "Gets the path of the specified resource file. Returns None if no such file exists."
     path = os.path.join(getWorkingDirectory(), name)
     return path if os.path.exists(path) else None
 
 
 def getOutputDirectory():
+    "Gets the activity's output directory. Any files written to this location will be uploaded as artefacts and available for child activities."
     outputDirectory = getDataDirectory()
 
     if not os.path.isdir(outputDirectory):
