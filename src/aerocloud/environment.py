@@ -60,7 +60,7 @@ def getDataDirectory():
 def getAllInputDirectories():
     "Gets the input directories for all parent activities. Any output files from parent activities can be found at these locations."
     parentTaskIds = [WORKSPACE_INPUT_DIR] if isLocal() else os.environ.get(TASK_PARENT_TASK_IDS_ENV_VAR).split(",")
-    return map(lambda id: os.path.join(getDataDirectory(), id), parentTaskIds)
+    return list(map(lambda id: os.path.join(getDataDirectory(), id), parentTaskIds))
 
 
 def getInputDirectory(parentOuputDirName: str):
@@ -83,7 +83,7 @@ def getInputFiles(parentOuputDirName: str, filter: str = "*.*"):
 
 def getAllInputFiles(filter: str = "*.*"):
     inputDirectories = getAllInputDirectories()
-    matches = map(lambda dir: glob.glob(os.path.join(dir, filter)), inputDirectories)
+    matches = list(map(lambda dir: glob.glob(os.path.join(dir, filter)), inputDirectories))
     return reduce(lambda a, b: a + b, matches)
 
 
