@@ -3,7 +3,7 @@ import unittest
 import os
 
 from aerocloud import environment, packages
-from aerocloud.environment import NODE_ID_ENV_VAR, WORKSPACE_WORKING_DIR, WORKSPACE_DATA_DIR, WORKSPACE_INPUT_DIR
+from aerocloud.environment import NODE_ID_ENV_VAR, TASK_DATA_DIR_ENV_VAR, TASK_PARENT_TASK_IDS_ENV_VAR, WORKSPACE_WORKING_DIR, WORKSPACE_DATA_DIR, WORKSPACE_INPUT_DIR
 from aerocloud.packages import AppPackage
 
 
@@ -52,9 +52,25 @@ class TestInputOutput(unittest.TestCase):
         # Delete temp task dir.
         cls.workspace.cleanup()
 
+    def tearDown(self):
+        os.environ.pop(NODE_ID_ENV_VAR, None)
+        os.environ.pop(TASK_DATA_DIR_ENV_VAR, None)
+        os.environ.pop(TASK_PARENT_TASK_IDS_ENV_VAR, None)
+
+    def test_getAllInputDirectories_should_return_all_input_paths(self):
+        # Simulate live environment.
+        os.environ[NODE_ID_ENV_VAR] = "NODE-123"
+        os.environ[TASK_DATA_DIR_ENV_VAR] = "C:\\data"
+        os.environ[TASK_PARENT_TASK_IDS_ENV_VAR] = "PARENT-1,PARENT-2"
+
+        expected = ["C:\\data\\PARENT-1", "C:\\data\\PARENT-2"]
+        actual = environment.getAllInputDirectories()
+
+        self.assertEqual(list(actual), expected)
+
     def test_getInputDirectory_should_return_input_path(self):
         expected = os.path.join(environment.getDataDirectory(), WORKSPACE_INPUT_DIR)
-        actual = environment.getInputDirectory()
+        actual = environment.getInputDirectory(WORKSPACE_INPUT_DIR)
         self.assertEqual(actual, expected)
 
     def test_getInputFiles_should_return_matching_files_only(self):
@@ -66,7 +82,7 @@ class TestInputOutput(unittest.TestCase):
         for file in [include, exclude]:
             open(file, "x").close()
 
-        actual = environment.getInputFiles("*.yes")
+        actual = environment.getAllInputFiles("*.yes")
         self.assertListEqual(list(actual), list([include]))
 
     def test_getResourceFile_should_return_file_path_when_file_exists(self):

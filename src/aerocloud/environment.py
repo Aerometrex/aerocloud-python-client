@@ -1,6 +1,8 @@
 import glob
 import os
 
+from functools import reduce
+
 DEFAULT_LOCAL_WORKSPACE = "C:\\temp\\aerocloud"
 WORKSPACE_WORKING_DIR = "wd"
 WORKSPACE_DATA_DIR = "data"
@@ -55,21 +57,34 @@ def getDataDirectory():
     return os.path.join(localWorkspace, WORKSPACE_DATA_DIR) if isLocal() else os.environ.get(TASK_DATA_DIR_ENV_VAR)
 
 
-def getInputDirectory():
-    "Gets the activity's input directory. Any output files from the parent activity can be found at this location."
-    # Note: The Python activity can only have a single parent.
-    parentTaskId = WORKSPACE_INPUT_DIR if isLocal() else os.environ.get(TASK_PARENT_TASK_IDS_ENV_VAR)
+def getAllInputDirectories():
+    "Gets the input directories for all parent activities. Any output files from parent activities can be found at these locations."
+    parentTaskIds = [WORKSPACE_INPUT_DIR] if isLocal() else os.environ.get(TASK_PARENT_TASK_IDS_ENV_VAR).split(",")
+    return map(lambda id: os.path.join(getDataDirectory(), id), parentTaskIds)
+
+
+def getInputDirectory(parentOuputDirName: str):
+    "Gets the input directory for the specified parent output directory name. Any output files from the parent activity can be found at this location."
+    parentTaskId = WORKSPACE_INPUT_DIR if isLocal() else parentOuputDirName
     inputDirectory = os.path.join(getDataDirectory(), parentTaskId)
 
     if not os.path.isdir(inputDirectory):
         print(f'Input directory {inputDirectory} does not exist. Did you forget to initialise your local workspace?')
 
+    # return os.path.realpath(inputDirectory)
     return inputDirectory
 
 
-def getInputFiles(filter: str = "*.*"):
+def getInputFiles(parentOuputDirName: str, filter: str = "*.*"):
     "Gets the paths of any input files that match the specified glob pattern."
-    return glob.glob(os.path.join(getInputDirectory(), filter))
+    inputDirectory = getInputDirectory(parentOuputDirName)
+    return glob.glob(os.path.join(inputDirectory, filter))
+
+
+def getAllInputFiles(filter: str = "*.*"):
+    inputDirectories = getAllInputDirectories()
+    matches = map(lambda dir: glob.glob(os.path.join(dir, filter)), inputDirectories)
+    return reduce(lambda a, b: a + b, matches)
 
 
 def getResourceFile(name: str):
